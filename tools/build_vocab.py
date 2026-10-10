@@ -14,7 +14,7 @@ art = re.compile(r'^(el|la|los|las|un|una) ')
 for l in open('tools/vocab_ch123.txt').read().split('\n'):
     l = l.strip()
     if not l or (l.startswith('#') and not l.startswith('##')): continue
-    if l.startswith('##'): ch = int(l[2:]); continue
+    if l.startswith('##'): ch = l[2:].strip(); continue
     g, a = [x.strip() for x in l.split(' = ', 1)]
     if g.lower() in seen: continue
     seen.add(g.lower())
@@ -24,7 +24,7 @@ for l in open('tools/vocab_ch123.txt').read().split('\n'):
             if v and v not in ans: ans.append(v)
     out.append((ch, g, ans))
 block = ['\n            ' + MARK + ' (generado desde tools/vocab_ch123.txt) =====']
-block += ['            { german: %s, spanish: %s, ch: %d },' % (json.dumps(g, ensure_ascii=False), json.dumps(a, ensure_ascii=False), c) for c, g, a in out]
+block += ['            { german: %s, spanish: %s, ch: %s },' % (json.dumps(g, ensure_ascii=False), json.dumps(a, ensure_ascii=False), json.dumps(c)) for c, g, a in out]
 i = html.index('const fullVocab = ['); j = html.index('\n        ];', i)
 body = html[i:j].rstrip()
 if not body.endswith(','): body += ','

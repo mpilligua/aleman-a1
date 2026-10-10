@@ -20,6 +20,7 @@ die Heimatstadt = la ciudad natal | ciudad natal | la ciudad de origen
 die Muttersprache = la lengua materna | lengua materna | el idioma materno
 die Sprache = el idioma | la lengua | idioma | lengua
 der Beruf = la profesión | el oficio | profesión | oficio | el trabajo
+## 1L
 Deutschland = Alemania
 Österreich = Austria
 die Schweiz = Suiza
@@ -66,6 +67,13 @@ Griechisch = griego
 Ungarisch = húngaro
 Rumänisch = rumano
 Tschechisch = checo
+Schwedisch = sueco
+Kroatisch = croata
+England = Inglaterra
+Kroatien = Croacia
+Bulgarien = Bulgaria
+die USA = Estados Unidos | los Estados Unidos | EEUU | EE.UU.
+## 1
 der Lehrer = el profesor | el maestro | el docente | profesor | maestro
 die Lehrerin = la profesora | la maestra | profesora | maestra
 der Student = el estudiante | estudiante | el universitario
