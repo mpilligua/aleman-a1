@@ -516,7 +516,12 @@
                     title = 'Las has confundido: las dos cuentan como fallo';
                 } else {
                     const la = lookalikes(currentWordIndex);
-                    if (la.length) { otherIdx = la[0]; label = 'Se parece a'; title = 'Cuidado, son parecidas'; }
+                    if (la.length) {
+                        otherIdx = la[0]; label = 'Se parece a'; title = 'Cuidado, son parecidas: las dos cuentan como fallo';
+                        registerWordFail(fullVocab[otherIdx].german);
+                        failedThisSession.add(otherIdx);
+                        if (!failedIndices.includes(otherIdx)) failedIndices.push(otherIdx);
+                    }
                 }
                 const cmp = document.getElementById('compare-box');
                 if (otherIdx >= 0) {
