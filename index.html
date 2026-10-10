@@ -3,113 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alemán - Encuentros A1+</title>
+    <title>Repaso de Alemán interactivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; text-align: center; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+        
+        .pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Ocultar elementos limpiamente */
         .hidden { display: none !important; }
-        .btn { padding: 12px 20px; margin: 10px; font-size: 16px; font-weight: bold; background-color: #0056b3; color: white; border: none; border-radius: 8px; cursor: pointer; width: 80%; max-width: 300px; }
-        .btn:hover { background-color: #004494; }
-        .btn-secondary { background-color: #6c757d; }
-        
-        /* Flashcard Styles */
-        #flashcard { background: white; border-radius: 12px; padding: 40px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 20px; transition: 0.3s; }
-        #german-word { font-size: 28px; font-weight: bold; color: #0056b3; margin-bottom: 20px; }
-        #spanish-input { padding: 12px; font-size: 18px; width: 80%; border: 2px solid #ccc; border-radius: 8px; text-align: center; outline: none; }
-        #spanish-input:focus { border-color: #0056b3; }
-        
-        .error-state { background-color: #ffe6e6 !important; border: 2px solid #ff4d4d; }
-        .error-state #spanish-input { text-decoration: line-through; color: #ff4d4d; }
-        #correction-box { display: none; background-color: #ff4d4d; color: white; font-size: 24px; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 20px; }
-        
-        /* Profile Styles */
-        #profile-screen { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: left; }
-        .stat-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .bad-word { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 text-slate-800 transition-colors duration-500" id="body-bg">
 
-    <!-- MENÚ PRINCIPAL -->
-    <div id="menu-screen">
-        <h2>Essen und Trinken (Kapitel 4)</h2>
-        <button class="btn" onclick="startQuiz()">Empezar a Estudiar</button>
-        <button class="btn btn-secondary" onclick="showProfile()">Ver mi Perfil</button>
-        <div id="sync-box" style="margin-top:20px; font-size:13px; color:#666;">
-            <span id="sync-status">Progreso guardado solo en este dispositivo</span><br>
-            <button class="btn btn-secondary" id="sync-btn" onclick="cloudToggle()" style="font-size:13px; padding:8px 12px;">Iniciar sesión con Google para sincronizar</button>
-        </div>
-    </div>
+    <div class="w-full max-w-2xl relative">
+        
+        <!-- PANTALLA DE INICIO -->
+        <div id="start-screen" class="bg-white rounded-3xl shadow-xl p-10 text-center pop">
+            <div class="text-7xl mb-6">🇩🇪</div>
+            <h1 class="text-4xl font-black text-blue-600 mb-4 tracking-tight">Essen und Trinken</h1>
+            <p class="text-slate-500 text-lg mb-8">Begegnungen A1+ (Kapitel 4) - Vocabulario completo</p>
+            
+            <div class="bg-blue-50 border border-blue-100 text-blue-800 p-6 rounded-2xl text-left text-sm mb-8 space-y-3">
+                <p class="flex items-center gap-2"><span>🔊</span> <b>Asegúrate de tener el volumen encendido.</b></p>
+                <p class="flex items-center gap-2"><span>⌨️</span> <b>Escribe la traducción y pulsa Enter.</b></p>
+                <p class="flex items-center gap-2"><span>🛑</span> <b>Si fallas, el juego se pausará obligatoriamente.</b></p>
+            </div>
 
-    <!-- PANTALLA DE ESTUDIO -->
-    <div id="quiz-screen" class="hidden">
-        <p id="progress-text">Palabra 1 de X</p>
-        <div id="flashcard">
-            <div id="german-word"></div>
-            <input type="text" id="spanish-input" placeholder="Traducción en español..." autocomplete="off">
-            <div id="correction-box"></div>
-        </div>
-        <button class="btn btn-secondary" onclick="showMenu()" style="margin-top:20px;">Volver al Menú</button>
-    </div>
+            <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl text-left text-sm mb-8">
+                <p class="font-bold text-slate-700 mb-1">📅 Has practicado <span id="streak-count" class="text-blue-600">0</span> días <span class="text-slate-400 font-normal">(último: <span id="last-date">nunca</span>)</span></p>
+                <p class="font-bold text-slate-700 mt-3 mb-1">⚠️ Palabras que más fallas</p>
+                <div id="hard-words-list" class="text-slate-600"></div>
+            </div>
 
-    <!-- PERFIL -->
-    <div id="profile-screen" class="hidden">
-        <h2>Tu Progreso</h2>
-        <div class="stat-box">
-            <h3>📅 Días de Práctica</h3>
-            <p>Has practicado <b id="streak-count">0</b> días.</p>
-            <p style="font-size: 12px; color: #666;">Último día: <span id="last-date">Nunca</span></p>
+            <button onclick="startApp()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-lg hover:shadow-xl text-xl transform hover:-translate-y-1">
+                ¡Empezar a estudiar!
+            </button>
+            <div id="sync-box" class="mt-6 text-sm text-slate-500">
+                <p id="sync-status" class="mb-2">Progreso guardado solo en este dispositivo</p>
+                <button id="sync-btn" onclick="cloudToggle()" class="text-blue-600 font-semibold underline">Iniciar sesión con Google para sincronizar</button>
+            </div>
         </div>
-        <div class="stat-box">
-            <h3>⚠️ Palabras que más fallas</h3>
-            <div id="hard-words-list"></div>
+
+        <!-- PANTALLA DE ESTUDIO -->
+        <div id="study-screen" class="hidden bg-white rounded-3xl shadow-2xl overflow-hidden pop">
+            <!-- Barra de progreso superior -->
+            <div class="h-3 w-full bg-slate-100">
+                <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-500 w-0"></div>
+            </div>
+            
+            <div class="p-8 sm:p-10 text-center flex flex-col min-h-[450px]">
+                <!-- Cabecera de la tarjeta -->
+                <div class="flex justify-between items-center mb-6">
+                    <span id="counter" class="text-base font-bold text-slate-400">1 / X</span>
+                    <span id="round-indicator" class="text-sm font-black px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full uppercase tracking-wider">Ronda 1</span>
+                </div>
+
+                <div class="flex-grow flex flex-col justify-center items-center relative w-full">
+                    <!-- Botón para repetir audio -->
+                    <button onclick="replayAudio()" class="absolute -top-4 right-0 text-slate-300 hover:text-blue-500 transition-colors p-2 rounded-full hover:bg-blue-50" title="Volver a escuchar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    </button>
+                    
+                    <!-- Palabra en Alemán -->
+                    <h2 id="german-word" class="text-5xl sm:text-6xl font-black text-slate-800 mb-10 mt-4 text-center leading-tight tracking-tight">
+                        das Wort
+                    </h2>
+
+                    <!-- Input del usuario -->
+                    <input type="text" id="answer-input" placeholder="Traducción en español..." autocomplete="off"
+                        class="w-full text-center text-2xl sm:text-3xl p-5 border-4 border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm font-semibold text-slate-700 placeholder-slate-300">
+                    
+                    <!-- Feedback visual de Acierto -->
+                    <div id="success-msg" class="hidden absolute inset-0 bg-green-500 rounded-2xl flex items-center justify-center pop z-10 pointer-events-none">
+                        <span class="text-5xl font-black text-white drop-shadow-md">¡CORRECTO! ✅</span>
+                    </div>
+                </div>
+
+                <!-- CAJA ROJA GIGANTE DE ERROR (La corrección crítica) -->
+                <div id="error-box" class="hidden w-full mt-8 bg-red-100 border-4 border-red-500 rounded-2xl p-6 text-center pop shadow-lg">
+                    <p class="text-red-700 font-bold uppercase tracking-widest text-sm mb-2">La respuesta correcta es:</p>
+                    <p id="correct-answer-text" class="text-4xl sm:text-5xl font-black text-red-900 mb-6 drop-shadow-sm">
+                        respuesta
+                    </p>
+                    <button id="continue-btn" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-10 rounded-xl transition-all shadow-md text-lg transform hover:scale-105">
+                        Continuar (Enter)
+                    </button>
+                </div>
+            </div>
         </div>
-        <button class="btn" onclick="showMenu()" style="width:100%;">Volver</button>
+
+        <!-- PANTALLA DE RESULTADOS -->
+        <div id="result-screen" class="hidden bg-white rounded-3xl shadow-2xl p-10 text-center pop">
+            <div id="result-icon" class="text-7xl mb-6 drop-shadow-md">🏆</div>
+            <h2 id="result-title" class="text-4xl font-black text-slate-800 mb-4 tracking-tight">¡Ronda completada!</h2>
+            <p id="result-desc" class="text-slate-600 text-xl mb-10">Has fallado X palabras.</p>
+            
+            <button id="next-action-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-lg hover:shadow-xl text-xl transform hover:-translate-y-1">
+                Siguiente acción
+            </button>
+        </div>
+
     </div>
 
     <script>
-        const vocabDB = [
-            { german: "das Frühstück", spanish: ["el desayuno", "desayuno"] },
-            { german: "das Mittagessen", spanish: ["la comida", "comida", "el almuerzo", "almuerzo"] },
-            { german: "das Abendessen", spanish: ["la cena", "cena"] },
-            { german: "das Obst", spanish: ["la fruta", "fruta"] },
-            { german: "der Apfel", spanish: ["la manzana", "manzana"] },
-            { german: "die Banane", spanish: ["la banana", "banana", "el platano", "platano", "el plátano", "plátano"] },
-            { german: "das Gemüse", spanish: ["la verdura", "verdura", "las verduras", "verduras", "la hortaliza", "hortaliza"] },
-            { german: "die Kartoffel", spanish: ["la patata", "patata", "la papa", "papa"] },
-            { german: "die Flasche", spanish: ["la botella", "botella"] },
-            { german: "die Dose", spanish: ["la lata", "lata"] },
-            { german: "die Packung", spanish: ["el paquete", "paquete"] },
-            { german: "der Becher", spanish: ["la tarrina", "tarrina", "el vaso", "vaso"] },
-            { german: "der Teller", spanish: ["el plato", "plato"] },
-            { german: "die Tasse", spanish: ["la taza", "taza"] },
-            { german: "das Glas", spanish: ["el vaso", "vaso"] },
-            { german: "das Messer", spanish: ["el cuchillo", "cuchillo"] },
-            { german: "die Gabel", spanish: ["el tenedor", "tenedor"] },
-            { german: "der Löffel", spanish: ["la cuchara", "cuchara"] },
-            { german: "der Kellner", spanish: ["el camarero", "camarero"] },
-            { german: "die Speisekarte", spanish: ["el menu", "menu", "el menú", "menú", "la carta", "carta"] },
-            { german: "essen", spanish: ["comer"] },
-            { german: "trinken", spanish: ["beber", "tomar"] },
-            { german: "kochen", spanish: ["cocinar", "hervir"] }
-        ];
-
-        let currentVocab = [];
-        let currentIndex = 0;
-        let isErrorState = false;
-        let mistakesThisRound = [];
-
-        // --- SISTEMA DE GUARDADO (LOCAL STORAGE) ---
-        let userData = JSON.parse(localStorage.getItem('aleman_stats')) || {
-            practiceDates: [],
-            wordFails: {}
-        };
-
+        // --- MEMORIA (localStorage + sincronización opcional) ---
+        let userData = JSON.parse(localStorage.getItem('aleman_stats') || 'null') || { practiceDates: [], wordFails: {} };
         function saveStats() {
             localStorage.setItem('aleman_stats', JSON.stringify(userData));
             if (window.cloudPush) window.cloudPush();
         }
-
-        // Fusiona datos de la nube con los locales (unión de días, máximo de fallos por palabra)
         function mergeStats(remote) {
             if (!remote) return;
             const dates = new Set([...userData.practiceDates, ...(remote.practiceDates || [])]);
@@ -120,182 +136,391 @@
             }
             localStorage.setItem('aleman_stats', JSON.stringify(userData));
         }
-
         function registerPracticeDay() {
             const today = new Date().toLocaleDateString('es-ES');
-            if (!userData.practiceDates.includes(today)) {
-                userData.practiceDates.push(today);
-                saveStats();
-            }
+            if (!userData.practiceDates.includes(today)) { userData.practiceDates.push(today); saveStats(); }
         }
-
-        function registerWordFail(germanWord) {
-            if (!userData.wordFails[germanWord]) userData.wordFails[germanWord] = 0;
-            userData.wordFails[germanWord]++;
+        function registerWordFail(w) {
+            userData.wordFails[w] = (userData.wordFails[w] || 0) + 1;
             saveStats();
         }
-        // -------------------------------------------
-
-        // Audio Context para sonidos
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playBeep(isCorrect) {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            if (isCorrect) {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            }
-        }
-
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'de-DE';
-            speechSynthesis.speak(utterance);
-        }
-
-        // Navegación
-        function showMenu() {
-            document.getElementById('menu-screen').classList.remove('hidden');
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('profile-screen').classList.add('hidden');
-        }
-
-        function showProfile() {
-            document.getElementById('menu-screen').classList.add('hidden');
-            document.getElementById('profile-screen').classList.remove('hidden');
-            
+        function renderStats() {
             document.getElementById('streak-count').innerText = userData.practiceDates.length;
-            document.getElementById('last-date').innerText = userData.practiceDates.length > 0 ? userData.practiceDates[userData.practiceDates.length - 1] : 'Nunca';
+            document.getElementById('last-date').innerText = userData.practiceDates.length ? userData.practiceDates[userData.practiceDates.length - 1] : 'nunca';
+            const top = Object.entries(userData.wordFails).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const list = document.getElementById('hard-words-list');
+            list.innerHTML = top.length ? '' : '<p>¡Aún no has fallado ninguna palabra!</p>';
+            top.forEach(([w, n]) => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between py-1 border-b border-slate-200';
+                row.innerHTML = '<span></span><span>❌ ' + n + '</span>';
+                row.firstChild.textContent = w;
+                list.appendChild(row);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', renderStats);
+    </script>
+    <script>
+        const fullVocab = [
+            // Comidas
+            { german: "das Frühstück", spanish: ["el desayuno", "desayuno"] },
+            { german: "das Mittagessen", spanish: ["la comida", "comida", "el almuerzo", "almuerzo"] },
+            { german: "das Abendessen", spanish: ["la cena", "cena"] },
             
-            // Ordenar palabras más falladas
-            const sortedFails = Object.entries(userData.wordFails).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            const listDiv = document.getElementById('hard-words-list');
-            listDiv.innerHTML = '';
+            // Alimentos varios
+            { german: "das Brot", spanish: ["el pan", "pan"] },
+            { german: "das Brötchen", spanish: ["el panecillo", "panecillo"] },
+            { german: "die Butter", spanish: ["la mantequilla", "mantequilla"] },
+            { german: "der Käse", spanish: ["el queso", "queso"] },
+            { german: "die Wurst", spanish: ["el embutido", "embutido", "la salchicha", "salchicha"] },
+            { german: "der Schinken", spanish: ["el jamon", "jamon", "el jamón", "jamón"] },
+            { german: "das Ei", spanish: ["el huevo", "huevo"] },
+            { german: "der Joghurt", spanish: ["el yogur", "yogur", "el yogurt", "yogurt"] },
+            { german: "der Quark", spanish: ["el requeson", "requeson", "el requesón", "requesón", "el queso batido", "queso batido"] },
+            { german: "die Marmelade", spanish: ["la mermelada", "mermelada"] },
+            { german: "der Honig", spanish: ["la miel", "miel"] },
+            { german: "der Reis", spanish: ["el arroz", "arroz"] },
+            { german: "die Nudeln", spanish: ["la pasta", "pasta", "los fideos", "fideos"] },
+            { german: "das Fleisch", spanish: ["la carne", "carne"] },
+            { german: "der Fisch", spanish: ["el pescado", "pescado"] },
             
-            if(sortedFails.length === 0) {
-                listDiv.innerHTML = "<p>¡Aún no has fallado ninguna palabra!</p>";
-            } else {
-                sortedFails.forEach(([word, count]) => {
-                    listDiv.innerHTML += `<div class="bad-word"><span>${word}</span> <span>❌ ${count} fallos</span></div>`;
-                });
+            // Fruta
+            { german: "das Obst", spanish: ["la fruta", "fruta"] },
+            { german: "der Apfel", spanish: ["la manzana", "manzana"] },
+            { german: "die Banane", spanish: ["la banana", "banana", "el platano", "platano", "el plátano", "plátano"] },
+            { german: "die Orange", spanish: ["la naranja", "naranja"] },
+            { german: "die Zitrone", spanish: ["el limon", "limon", "el limón", "limón"] },
+            { german: "die Erdbeere", spanish: ["la fresa", "fresa"] },
+            { german: "die Weintraube", spanish: ["la uva", "uva"] },
+            
+            // Verduras
+            { german: "das Gemüse", spanish: ["la verdura", "verdura", "las verduras", "verduras", "la hortaliza", "hortaliza"] },
+            { german: "die Tomate", spanish: ["el tomate", "tomate"] },
+            { german: "die Gurke", spanish: ["el pepino", "pepino"] },
+            { german: "die Kartoffel", spanish: ["la patata", "patata", "la papa", "papa"] },
+            { german: "die Zwiebel", spanish: ["la cebolla", "cebolla"] },
+            { german: "der Salat", spanish: ["la ensalada", "ensalada", "la lechuga", "lechuga"] },
+            
+            // Bebidas
+            { german: "das Wasser", spanish: ["el agua", "agua"] },
+            { german: "das Mineralwasser", spanish: ["el agua mineral", "agua mineral"] },
+            { german: "der Saft", spanish: ["el zumo", "zumo", "el jugo", "jugo"] },
+            { german: "der Apfelsaft", spanish: ["el zumo de manzana", "zumo de manzana", "el jugo de manzana", "jugo de manzana"] },
+            { german: "der Kaffee", spanish: ["el cafe", "cafe", "el café", "café"] },
+            { german: "der Tee", spanish: ["el te", "te", "el té", "té"] },
+            { german: "die Milch", spanish: ["la leche", "leche"] },
+            { german: "das Bier", spanish: ["la cerveza", "cerveza"] },
+            { german: "der Wein", spanish: ["el vino", "vino"] },
+            
+            // Envases
+            { german: "die Flasche", spanish: ["la botella", "botella"] },
+            { german: "die Dose", spanish: ["la lata", "lata"] },
+            { german: "die Packung", spanish: ["el paquete", "paquete"] },
+            { german: "der Becher", spanish: ["la tarrina", "tarrina", "el vasito", "vasito", "el vaso", "vaso"] },
+            { german: "das Glas", spanish: ["el vaso", "vaso", "el tarro", "tarro", "la copa", "copa"] },
+            { german: "das Stück", spanish: ["el trozo", "trozo", "el pedazo", "pedazo"] },
+            
+            // Vajilla
+            { german: "der Teller", spanish: ["el plato", "plato"] },
+            { german: "die Tasse", spanish: ["la taza", "taza"] },
+            { german: "das Messer", spanish: ["el cuchillo", "cuchillo"] },
+            { german: "die Gabel", spanish: ["el tenedor", "tenedor"] },
+            { german: "der Löffel", spanish: ["la cuchara", "cuchara"] },
+            
+            // Restaurante
+            { german: "der Kellner", spanish: ["el camarero", "camarero", "el mesero", "mesero"] },
+            { german: "die Speisekarte", spanish: ["la carta", "carta", "el menu", "menu", "el menú", "menú"] },
+            { german: "die Rechnung", spanish: ["la cuenta", "cuenta"] },
+            { german: "das Trinkgeld", spanish: ["la propina", "propina"] },
+            
+            // Verbos
+            { german: "essen", spanish: ["comer"] },
+            { german: "trinken", spanish: ["beber", "tomar"] },
+            { german: "nehmen", spanish: ["tomar", "coger"] },
+            { german: "kochen", spanish: ["cocinar", "hervir"] },
+            { german: "schmecken", spanish: ["saber bien", "saber", "degustar"] },
+            { german: "bezahlen", spanish: ["pagar"] },
+            { german: "bestellen", spanish: ["pedir", "encargar"] },
+            { german: "mögen", spanish: ["gustar"] }
+        ];
+
+        let activeIndices = [];
+        let failedIndices = [];
+        let currentPos = 0;
+        let roundNumber = 1;
+        
+        // Estados posibles: 'WAITING_ANSWER', 'SHOWING_ERROR', 'SHOWING_SUCCESS'
+        let appState = 'WAITING_ANSWER'; 
+        let inputLocked = false; // Bloqueo anti-repetición de teclas
+        
+        let audioCtx; 
+
+        const ui = {
+            bodyBg: document.getElementById('body-bg'),
+            startScreen: document.getElementById('start-screen'),
+            studyScreen: document.getElementById('study-screen'),
+            resultScreen: document.getElementById('result-screen'),
+            germanWord: document.getElementById('german-word'),
+            input: document.getElementById('answer-input'),
+            counter: document.getElementById('counter'),
+            progressBar: document.getElementById('progress-bar'),
+            errorBox: document.getElementById('error-box'),
+            correctAnswerText: document.getElementById('correct-answer-text'),
+            successMsg: document.getElementById('success-msg'),
+            continueBtn: document.getElementById('continue-btn'),
+            roundIndicator: document.getElementById('round-indicator')
+        };
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
         }
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
+        function playSuccessSound() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Do5
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi5
+            
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        function startQuiz() {
+        function playErrorSound() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.25);
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function speakWord(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'de-DE';
+                utterance.rate = 0.85; // Velocidad ajustada para claridad
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function replayAudio() {
+            const wordData = fullVocab[activeIndices[currentPos]];
+            speakWord(wordData.german);
+            if(appState === 'WAITING_ANSWER') ui.input.focus();
+        }
+
+        function startApp() {
+            initAudio(); 
             registerPracticeDay();
-            document.getElementById('menu-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
+            activeIndices = fullVocab.map((_, i) => i);
+            activeIndices.sort(() => Math.random() - 0.5); // Barajar aleatoriamente
             
-            currentVocab = shuffle([...vocabDB]);
-            mistakesThisRound = [];
-            currentIndex = 0;
-            showWord();
+            ui.startScreen.classList.add('hidden');
+            ui.studyScreen.classList.remove('hidden');
+            
+            startRound();
         }
 
-        function showWord() {
-            if (currentIndex >= currentVocab.length) {
-                if (mistakesThisRound.length > 0) {
-                    alert("¡Ronda terminada! Ahora repasaremos solo las que has fallado.");
-                    currentVocab = shuffle([...mistakesThisRound]);
-                    mistakesThisRound = [];
-                    currentIndex = 0;
-                } else {
-                    alert("¡Perfecto! Has terminado todas las palabras sin fallos pendientes.");
-                    showMenu();
-                    return;
-                }
-            }
+        function startRound() {
+            currentPos = 0;
+            failedIndices = [];
+            ui.roundIndicator.innerText = `Ronda ${roundNumber}`;
+            loadCard();
+        }
 
-            isErrorState = false;
-            const flashcard = document.getElementById("flashcard");
-            const wordEl = document.getElementById("german-word");
-            const inputEl = document.getElementById("spanish-input");
-            const correctionBox = document.getElementById("correction-box");
-
-            flashcard.classList.remove("error-state");
-            correctionBox.style.display = "none";
-            inputEl.value = "";
-            inputEl.readOnly = false;
+        function loadCard() {
+            appState = 'WAITING_ANSWER';
+            inputLocked = false;
             
-            const currentItem = currentVocab[currentIndex];
-            wordEl.innerText = currentItem.german;
-            document.getElementById("progress-text").innerText = `Palabra ${currentIndex + 1} de ${currentVocab.length}`;
+            const currentWordIndex = activeIndices[currentPos];
+            const wordData = fullVocab[currentWordIndex];
             
-            speak(currentItem.german);
-            setTimeout(() => inputEl.focus(), 100);
+            // Restablecer estilos
+            ui.bodyBg.className = "bg-slate-100 min-h-screen flex items-center justify-center p-4 text-slate-800 transition-colors duration-500";
+            ui.germanWord.innerText = wordData.german;
+            
+            // Restablecer input
+            ui.input.value = "";
+            ui.input.disabled = false;
+            ui.input.className = "w-full text-center text-2xl sm:text-3xl p-5 border-4 border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all shadow-sm font-semibold text-slate-700 placeholder-slate-300";
+            ui.input.classList.remove('line-through', 'opacity-50');
+            
+            // Ocultar feedbacks
+            ui.errorBox.classList.add('hidden');
+            ui.successMsg.classList.add('hidden');
+            
+            // Actualizar progreso
+            ui.counter.innerText = `${currentPos + 1} / ${activeIndices.length}`;
+            ui.progressBar.style.width = `${(currentPos / activeIndices.length) * 100}%`;
+            
+            // Reproducir y enfocar
+            speakWord(wordData.german);
+            setTimeout(() => ui.input.focus(), 50);
         }
 
         function normalizeString(str) {
             return str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
 
-        document.getElementById("spanish-input").addEventListener("keyup", function(event) {
-            if (event.key === "Enter") {
-                const inputEl = document.getElementById("spanish-input");
+        function processAnswer() {
+            // Evitar múltiples ejecuciones por mantener pulsada la tecla
+            if (appState !== 'WAITING_ANSWER' || inputLocked || ui.input.value.trim() === "") return;
+            
+            const currentWordIndex = activeIndices[currentPos];
+            const wordData = fullVocab[currentWordIndex];
+            const userAnswer = normalizeString(ui.input.value);
+            const correctAnswers = wordData.spanish.map(normalizeString);
+
+            ui.input.disabled = true;
+
+            if (correctAnswers.includes(userAnswer)) {
+                // --- ACIERTO ---
+                playSuccessSound();
+                appState = 'SHOWING_SUCCESS';
                 
-                // Si estamos en estado de error, un Enter avanza a la siguiente palabra
-                if (isErrorState) {
-                    currentIndex++;
-                    showWord();
+                // Mostrar overlay verde de acierto
+                ui.successMsg.classList.remove('hidden');
+                ui.bodyBg.classList.add('bg-green-50');
+                
+                // Avanzar automáticamente rápido
+                setTimeout(nextCard, 700);
+                
+            } else {
+                // --- ERROR CRÍTICO (AQUÍ ESTÁ LA SOLUCIÓN) ---
+                playErrorSound();
+                appState = 'SHOWING_ERROR';
+                failedIndices.push(currentWordIndex);
+                registerWordFail(wordData.german);
+                
+                // Bloqueo temporal de 500ms para evitar saltarse la pantalla si se deja pulsado Enter
+                inputLocked = true;
+                setTimeout(() => { inputLocked = false; }, 500);
+                
+                // Tachar el input incorrecto
+                ui.input.classList.add('border-red-400', 'bg-red-50', 'text-red-400', 'line-through', 'opacity-60');
+                ui.bodyBg.classList.add('bg-red-100');
+                
+                // MOSTRAR CAJA ROJA GIGANTE
+                const rightAnswer = wordData.spanish[0];
+                ui.correctAnswerText.innerText = rightAnswer;
+                ui.errorBox.classList.remove('hidden');
+                
+                // Enfocar el botón de continuar para que sea claro qué hacer
+                setTimeout(() => ui.continueBtn.focus(), 100);
+                
+                // IMPORTANTE: NO HAY SETTIMEOUT PARA nextCard AQUÍ. 
+                // El programa se detiene hasta que el usuario actúe.
+            }
+        }
+
+        function nextCard() {
+            currentPos++;
+            if (currentPos < activeIndices.length) {
+                loadCard();
+            } else {
+                finishRound();
+            }
+        }
+
+        function finishRound() {
+            ui.progressBar.style.width = "100%";
+            setTimeout(() => {
+                ui.bodyBg.className = "bg-slate-100 min-h-screen flex items-center justify-center p-4 text-slate-800 transition-colors duration-500";
+                ui.studyScreen.classList.add('hidden');
+                ui.resultScreen.classList.remove('hidden');
+                
+                const titleEl = document.getElementById('result-title');
+                const descEl = document.getElementById('result-desc');
+                const iconEl = document.getElementById('result-icon');
+                const btnEl = document.getElementById('next-action-btn');
+
+                if (failedIndices.length === 0) {
+                    playSuccessSound();
+                    iconEl.innerText = "🌟";
+                    titleEl.innerText = "¡IMPECABLE!";
+                    titleEl.className = "text-5xl font-black text-green-600 mb-4 tracking-tight";
+                    descEl.innerText = `¡Lo sabes TODO! No has fallado ni una sola palabra.`;
+                    
+                    btnEl.innerText = "Empezar de nuevo desde cero";
+                    btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-lg hover:shadow-xl text-xl";
+                    btnEl.onclick = () => {
+                        ui.resultScreen.classList.add('hidden');
+                        roundNumber = 1;
+                        startApp(); 
+                    };
+                } else {
+                    iconEl.innerText = "🧠";
+                    titleEl.innerText = "¡Ronda terminada!";
+                    titleEl.className = "text-4xl font-black text-orange-500 mb-4 tracking-tight";
+                    
+                    const wordStr = failedIndices.length === 1 ? "palabra" : "palabras";
+                    descEl.innerHTML = `Te quedan <b class="text-red-600 text-2xl">${failedIndices.length}</b> ${wordStr} por dominar.<br>Vamos a repasar solo las que has fallado.`;
+                    
+                    btnEl.innerText = `Repasar las ${failedIndices.length} falladas`;
+                    btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-lg hover:shadow-xl text-xl";
+                    btnEl.onclick = () => {
+                        ui.resultScreen.classList.add('hidden');
+                        ui.studyScreen.classList.remove('hidden');
+                        activeIndices = [...failedIndices]; // Pasar solo fallos
+                        // Barajar de nuevo los fallos para que no salgan en el mismo orden
+                        activeIndices.sort(() => Math.random() - 0.5);
+                        roundNumber++;
+                        startRound();
+                    };
+                }
+            }, 300);
+        }
+
+        // Usamos keyup en lugar de keydown para evitar que dejar apretada la tecla dispare múltiples eventos
+        document.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                if (!ui.startScreen.classList.contains('hidden')) {
+                    startApp();
                     return;
                 }
-
-                const userAnswer = normalizeString(inputEl.value);
-                if (userAnswer === "") return;
-
-                const currentItem = currentVocab[currentIndex];
-                const correctAnswers = currentItem.spanish.map(normalizeString);
-
-                if (correctAnswers.includes(userAnswer)) {
-                    playBeep(true);
-                    currentIndex++;
-                    showWord();
-                } else {
-                    // FALLO
-                    playBeep(false);
-                    registerWordFail(currentItem.german); // Guardar fallo en el perfil
-                    
-                    if (!mistakesThisRound.includes(currentItem)) {
-                        mistakesThisRound.push(currentItem);
+                
+                if (!ui.studyScreen.classList.contains('hidden')) {
+                    if (appState === 'WAITING_ANSWER') {
+                        processAnswer();
+                    } else if (appState === 'SHOWING_ERROR' && !inputLocked) {
+                        // Solo permite avanzar si el bloqueo de seguridad (500ms) ha terminado
+                        nextCard();
                     }
-                    
-                    isErrorState = true;
-                    inputEl.readOnly = true;
-                    
-                    const flashcard = document.getElementById("flashcard");
-                    const correctionBox = document.getElementById("correction-box");
-                    
-                    flashcard.classList.add("error-state");
-                    correctionBox.innerText = currentItem.spanish[0].toUpperCase();
-                    correctionBox.style.display = "block";
                 }
             }
         });
-    </script>
 
+        // Evento de clic en el botón de la caja de error
+        ui.continueBtn.addEventListener('click', function() {
+            if (appState === 'SHOWING_ERROR' && !inputLocked) {
+                nextCard();
+            }
+        });
+
+    </script>
     <!-- SINCRONIZACIÓN (Firebase). Rellena firebaseConfig; si queda vacío, la app funciona solo en local. -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -341,7 +566,7 @@
             onAuthStateChanged(auth, async (u) => {
                 user = u;
                 if (!u) {
-                    statusEl.textContent = "Progreso guardado solo en este dispositivo";
+                    statusEl.textContent = "Progreso guardado solo en este dispositivo"; if (window.renderStats) renderStats();
                     btnEl.textContent = "Iniciar sesión con Google para sincronizar";
                     return;
                 }
@@ -349,6 +574,7 @@
                 try {
                     const snap = await getDoc(doc(db, "users", u.uid));
                     if (snap.exists()) mergeStats(snap.data());
+                    if (window.renderStats) renderStats();
                     window.cloudPush();
                 } catch (e) { statusEl.textContent = "No se pudo leer la nube: " + e.code; }
             });
