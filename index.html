@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alemán - Encuentros A1+</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; text-align: center; }
+        .hidden { display: none !important; }
+        .btn { padding: 12px 20px; margin: 10px; font-size: 16px; font-weight: bold; background-color: #0056b3; color: white; border: none; border-radius: 8px; cursor: pointer; width: 80%; max-width: 300px; }
+        .btn:hover { background-color: #004494; }
+        .btn-secondary { background-color: #6c757d; }
+        
+        /* Flashcard Styles */
+        #flashcard { background: white; border-radius: 12px; padding: 40px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 20px; transition: 0.3s; }
+        #german-word { font-size: 28px; font-weight: bold; color: #0056b3; margin-bottom: 20px; }
+        #spanish-input { padding: 12px; font-size: 18px; width: 80%; border: 2px solid #ccc; border-radius: 8px; text-align: center; outline: none; }
+        #spanish-input:focus { border-color: #0056b3; }
+        
+        .error-state { background-color: #ffe6e6 !important; border: 2px solid #ff4d4d; }
+        .error-state #spanish-input { text-decoration: line-through; color: #ff4d4d; }
+        #correction-box { display: none; background-color: #ff4d4d; color: white; font-size: 24px; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        
+        /* Profile Styles */
+        #profile-screen { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: left; }
+        .stat-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .bad-word { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ PRINCIPAL -->
+    <div id="menu-screen">
+        <h2>Essen und Trinken (Kapitel 4)</h2>
+        <button class="btn" onclick="startQuiz()">Empezar a Estudiar</button>
+        <button class="btn btn-secondary" onclick="showProfile()">Ver mi Perfil</button>
+        <div id="sync-box" style="margin-top:20px; font-size:13px; color:#666;">
+            <span id="sync-status">Progreso guardado solo en este dispositivo</span><br>
+            <button class="btn btn-secondary" id="sync-btn" onclick="cloudToggle()" style="font-size:13px; padding:8px 12px;">Iniciar sesión con Google para sincronizar</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE ESTUDIO -->
+    <div id="quiz-screen" class="hidden">
+        <p id="progress-text">Palabra 1 de X</p>
+        <div id="flashcard">
+            <div id="german-word"></div>
+            <input type="text" id="spanish-input" placeholder="Traducción en español..." autocomplete="off">
+            <div id="correction-box"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="showMenu()" style="margin-top:20px;">Volver al Menú</button>
+    </div>
+
+    <!-- PERFIL -->
+    <div id="profile-screen" class="hidden">
+        <h2>Tu Progreso</h2>
+        <div class="stat-box">
+            <h3>📅 Días de Práctica</h3>
+            <p>Has practicado <b id="streak-count">0</b> días.</p>
+            <p style="font-size: 12px; color: #666;">Último día: <span id="last-date">Nunca</span></p>
+        </div>
+        <div class="stat-box">
+            <h3>⚠️ Palabras que más fallas</h3>
+            <div id="hard-words-list"></div>
+        </div>
+        <button class="btn" onclick="showMenu()" style="width:100%;">Volver</button>
+    </div>
+
+    <script>
+        const vocabDB = [
+            { german: "das Frühstück", spanish: ["el desayuno", "desayuno"] },
+            { german: "das Mittagessen", spanish: ["la comida", "comida", "el almuerzo", "almuerzo"] },
+            { german: "das Abendessen", spanish: ["la cena", "cena"] },
+            { german: "das Obst", spanish: ["la fruta", "fruta"] },
+            { german: "der Apfel", spanish: ["la manzana", "manzana"] },
+            { german: "die Banane", spanish: ["la banana", "banana", "el platano", "platano", "el plátano", "plátano"] },
+            { german: "das Gemüse", spanish: ["la verdura", "verdura", "las verduras", "verduras", "la hortaliza", "hortaliza"] },
+            { german: "die Kartoffel", spanish: ["la patata", "patata", "la papa", "papa"] },
+            { german: "die Flasche", spanish: ["la botella", "botella"] },
+            { german: "die Dose", spanish: ["la lata", "lata"] },
+            { german: "die Packung", spanish: ["el paquete", "paquete"] },
+            { german: "der Becher", spanish: ["la tarrina", "tarrina", "el vaso", "vaso"] },
+            { german: "der Teller", spanish: ["el plato", "plato"] },
+            { german: "die Tasse", spanish: ["la taza", "taza"] },
+            { german: "das Glas", spanish: ["el vaso", "vaso"] },
+            { german: "das Messer", spanish: ["el cuchillo", "cuchillo"] },
+            { german: "die Gabel", spanish: ["el tenedor", "tenedor"] },
+            { german: "der Löffel", spanish: ["la cuchara", "cuchara"] },
+            { german: "der Kellner", spanish: ["el camarero", "camarero"] },
+            { german: "die Speisekarte", spanish: ["el menu", "menu", "el menú", "menú", "la carta", "carta"] },
+            { german: "essen", spanish: ["comer"] },
+            { german: "trinken", spanish: ["beber", "tomar"] },
+            { german: "kochen", spanish: ["cocinar", "hervir"] }
+        ];
+
+        let currentVocab = [];
+        let currentIndex = 0;
+        let isErrorState = false;
+        let mistakesThisRound = [];
+
+        // --- SISTEMA DE GUARDADO (LOCAL STORAGE) ---
+        let userData = JSON.parse(localStorage.getItem('aleman_stats')) || {
+            practiceDates: [],
+            wordFails: {}
+        };
+
+        function saveStats() {
+            localStorage.setItem('aleman_stats', JSON.stringify(userData));
+            if (window.cloudPush) window.cloudPush();
+        }
+
+        // Fusiona datos de la nube con los locales (unión de días, máximo de fallos por palabra)
+        function mergeStats(remote) {
+            if (!remote) return;
+            const dates = new Set([...userData.practiceDates, ...(remote.practiceDates || [])]);
+            const parse = d => { const [dd, mm, yy] = d.split('/').map(Number); return new Date(yy, mm - 1, dd).getTime(); };
+            userData.practiceDates = [...dates].sort((a, b) => parse(a) - parse(b));
+            for (const [w, n] of Object.entries(remote.wordFails || {})) {
+                userData.wordFails[w] = Math.max(userData.wordFails[w] || 0, n);
+            }
+            localStorage.setItem('aleman_stats', JSON.stringify(userData));
+        }
+
+        function registerPracticeDay() {
+            const today = new Date().toLocaleDateString('es-ES');
+            if (!userData.practiceDates.includes(today)) {
+                userData.practiceDates.push(today);
+                saveStats();
+            }
+        }
+
+        function registerWordFail(germanWord) {
+            if (!userData.wordFails[germanWord]) userData.wordFails[germanWord] = 0;
+            userData.wordFails[germanWord]++;
+            saveStats();
+        }
+        // -------------------------------------------
+
+        // Audio Context para sonidos
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(isCorrect) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (isCorrect) {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'de-DE';
+            speechSynthesis.speak(utterance);
+        }
+
+        // Navegación
+        function showMenu() {
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('profile-screen').classList.add('hidden');
+        }
+
+        function showProfile() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('profile-screen').classList.remove('hidden');
+            
+            document.getElementById('streak-count').innerText = userData.practiceDates.length;
+            document.getElementById('last-date').innerText = userData.practiceDates.length > 0 ? userData.practiceDates[userData.practiceDates.length - 1] : 'Nunca';
+            
+            // Ordenar palabras más falladas
+            const sortedFails = Object.entries(userData.wordFails).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const listDiv = document.getElementById('hard-words-list');
+            listDiv.innerHTML = '';
+            
+            if(sortedFails.length === 0) {
+                listDiv.innerHTML = "<p>¡Aún no has fallado ninguna palabra!</p>";
+            } else {
+                sortedFails.forEach(([word, count]) => {
+                    listDiv.innerHTML += `<div class="bad-word"><span>${word}</span> <span>❌ ${count} fallos</span></div>`;
+                });
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            registerPracticeDay();
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            currentVocab = shuffle([...vocabDB]);
+            mistakesThisRound = [];
+            currentIndex = 0;
+            showWord();
+        }
+
+        function showWord() {
+            if (currentIndex >= currentVocab.length) {
+                if (mistakesThisRound.length > 0) {
+                    alert("¡Ronda terminada! Ahora repasaremos solo las que has fallado.");
+                    currentVocab = shuffle([...mistakesThisRound]);
+                    mistakesThisRound = [];
+                    currentIndex = 0;
+                } else {
+                    alert("¡Perfecto! Has terminado todas las palabras sin fallos pendientes.");
+                    showMenu();
+                    return;
+                }
+            }
+
+            isErrorState = false;
+            const flashcard = document.getElementById("flashcard");
+            const wordEl = document.getElementById("german-word");
+            const inputEl = document.getElementById("spanish-input");
+            const correctionBox = document.getElementById("correction-box");
+
+            flashcard.classList.remove("error-state");
+            correctionBox.style.display = "none";
+            inputEl.value = "";
+            inputEl.readOnly = false;
+            
+            const currentItem = currentVocab[currentIndex];
+            wordEl.innerText = currentItem.german;
+            document.getElementById("progress-text").innerText = `Palabra ${currentIndex + 1} de ${currentVocab.length}`;
+            
+            speak(currentItem.german);
+            setTimeout(() => inputEl.focus(), 100);
+        }
+
+        function normalizeString(str) {
+            return str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        document.getElementById("spanish-input").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                const inputEl = document.getElementById("spanish-input");
+                
+                // Si estamos en estado de error, un Enter avanza a la siguiente palabra
+                if (isErrorState) {
+                    currentIndex++;
+                    showWord();
+                    return;
+                }
+
+                const userAnswer = normalizeString(inputEl.value);
+                if (userAnswer === "") return;
+
+                const currentItem = currentVocab[currentIndex];
+                const correctAnswers = currentItem.spanish.map(normalizeString);
+
+                if (correctAnswers.includes(userAnswer)) {
+                    playBeep(true);
+                    currentIndex++;
+                    showWord();
+                } else {
+                    // FALLO
+                    playBeep(false);
+                    registerWordFail(currentItem.german); // Guardar fallo en el perfil
+                    
+                    if (!mistakesThisRound.includes(currentItem)) {
+                        mistakesThisRound.push(currentItem);
+                    }
+                    
+                    isErrorState = true;
+                    inputEl.readOnly = true;
+                    
+                    const flashcard = document.getElementById("flashcard");
+                    const correctionBox = document.getElementById("correction-box");
+                    
+                    flashcard.classList.add("error-state");
+                    correctionBox.innerText = currentItem.spanish[0].toUpperCase();
+                    correctionBox.style.display = "block";
+                }
+            }
+        });
+    </script>
+
+    <!-- SINCRONIZACIÓN (Firebase). Rellena firebaseConfig; si queda vacío, la app funciona solo en local. -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            appId: ""
+        };
+
+        const statusEl = document.getElementById('sync-status');
+        const btnEl = document.getElementById('sync-btn');
+
+        if (!firebaseConfig.apiKey) {
+            document.getElementById('sync-box').classList.add('hidden');
+        } else {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            let user = null, timer = null;
+
+            window.cloudToggle = async () => {
+                try {
+                    if (user) await signOut(auth);
+                    else await signInWithPopup(auth, new GoogleAuthProvider());
+                } catch (e) { statusEl.textContent = "Error de sesión: " + e.code; }
+            };
+
+            window.cloudPush = () => {
+                if (!user) return;
+                clearTimeout(timer);
+                timer = setTimeout(async () => {
+                    try {
+                        await setDoc(doc(db, "users", user.uid), JSON.parse(localStorage.getItem('aleman_stats')));
+                        statusEl.textContent = "☁️ Sincronizado (" + user.email + ")";
+                    } catch (e) { statusEl.textContent = "No se pudo sincronizar: " + e.code; }
+                }, 800);
+            };
+
+            onAuthStateChanged(auth, async (u) => {
+                user = u;
+                if (!u) {
+                    statusEl.textContent = "Progreso guardado solo en este dispositivo";
+                    btnEl.textContent = "Iniciar sesión con Google para sincronizar";
+                    return;
+                }
+                btnEl.textContent = "Cerrar sesión";
+                try {
+                    const snap = await getDoc(doc(db, "users", u.uid));
+                    if (snap.exists()) mergeStats(snap.data());
+                    window.cloudPush();
+                } catch (e) { statusEl.textContent = "No se pudo leer la nube: " + e.code; }
+            });
+        }
+    </script>
+</body>
+</html>
